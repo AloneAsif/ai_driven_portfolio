@@ -6,9 +6,9 @@ export const siteConfig = {
   url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
   ogImage: "/og.png",
   links: {
-    github: "https://github.com/",
-    twitter: "https://x.com/",
-    linkedin: "https://www.linkedin.com/",
+    github: "https://github.com/AloneAsif",
+    twitter: "https://x.com/AsifKhadim36513",
+    linkedin: "https://www.linkedin.com/in/asif-khadim-12ba332a4/",
   },
   // Placeholder author info — replace with your real details, or manage via
   // the `author` document in the Sanity Studio.
