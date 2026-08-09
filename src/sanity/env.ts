@@ -13,7 +13,14 @@ export const dataset =
 export const apiVersion =
   process.env.NEXT_PUBLIC_SANITY_API_VERSION || "2026-02-01";
 
-export const readToken = process.env.SANITY_API_READ_TOKEN;
+const rawReadToken = process.env.SANITY_API_READ_TOKEN?.trim();
+/**
+ * Read-only Sanity token, or `undefined` when unset/empty. `.env.local` uses
+ * a literal `;` as a "leave blank" sentinel — treat that as unset too so
+ * `next-sanity` doesn't try to enable draft-mode fetching with a bogus token.
+ */
+export const readToken =
+  rawReadToken && rawReadToken !== ";" ? rawReadToken : undefined;
 
 /** True when a Sanity project has been configured. */
 export const isSanityConfigured = projectId.length > 0;

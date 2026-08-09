@@ -121,6 +121,49 @@ The post appears on `/blog` and at `/blog/<slug>` immediately. With live preview
 
 ---
 
+## Publishing without redeploys
+
+By default the site is statically generated at build time, so new/edited
+content only shows up after a redeploy. To fix that, the project includes an
+**on-demand revalidation endpoint** (`/api/revalidate`) that refreshes the
+cache the moment you publish in the Studio — no redeploy needed.
+
+### 1. Set a shared secret
+
+Pick a long random string (e.g. `openssl rand -hex 32`) and use it in two
+places:
+
+- `.env.local` → `SANITY_REVALIDATE_SECRET=<that string>` (also add the same
+  variable to **Vercel → Project → Settings → Environment Variables**).
+- The Sanity webhook (step 2) — same value.
+
+### 2. Add a Sanity webhook
+
+1. Go to [sanity.io/manage](https://sanity.io/manage) → your project →
+   **API → Webhooks** → **Add webhook**.
+2. **URL**: `https://<your-site>.vercel.app/api/revalidate`
+   (use `http://localhost:3000/api/revalidate` while testing locally).
+3. **Method**: POST.
+4. **Secret**: paste the value from step 1.
+5. **Filter** — limit to the content types the site shows:
+   `_type in ["project", "post", "category"]`
+6. Keep the default triggers (**create**, **update**, **delete**).
+7. Save, then click **Test** — it should return `{"revalidated": true}`.
+
+Now publish a project in the Studio and refresh the site: it appears
+immediately, with no redeploy.
+
+### 3. (Optional) True in-browser real-time editing
+
+For live updates *while you edit* (Sanity Visual Editing / Presentation):
+
+1. Create a **read-only** API token at Sanity Manage → **API → Tokens** and set
+   `SANITY_API_READ_TOKEN` in `.env.local` (and on Vercel).
+2. Add `http://localhost:3000` and your deployed URL to **API → CORS origins**.
+3. Set `NEXT_PUBLIC_BASE_URL` to your deployed URL.
+
+---
+
 ## Changing or adding fields in Sanity
 
 Every content type is a **schema** defined in `src/sanity/schemaTypes/`. To change which fields exist in the Studio, edit these files — then restart the dev server.

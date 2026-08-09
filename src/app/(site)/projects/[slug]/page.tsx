@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, FolderGit2, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { GalleryLightbox } from "@/components/gallery-lightbox";
 import { PortableTextRenderer } from "@/components/portable-text";
 import { SanityImage } from "@/components/sanity-image";
 import { fetchSanity } from "@/sanity/lib/data";
@@ -128,19 +129,12 @@ export default async function ProjectPage({
       </div>
 
       {project.gallery && project.gallery.length > 0 && (
-        <div className="mt-12 grid gap-4 sm:grid-cols-2">
-          {project.gallery.map((image, index) => (
-            <SanityImage
-              key={index}
-              asset={image}
-              alt={`${project.title} ${index + 1}`}
-              width={800}
-              height={600}
-              className="w-full rounded-lg"
-              sizes="(min-width: 640px) 50vw, 100vw"
-            />
-          ))}
-        </div>
+        <section className="mt-12">
+          <h2 className="font-heading text-xl font-semibold">Gallery</h2>
+          <div className="mt-4">
+            <GalleryLightbox images={project.gallery} title={project.title} />
+          </div>
+        </section>
       )}
     </article>
   );
