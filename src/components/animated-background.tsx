@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useTheme } from "next-themes";
 
 interface RGB {
   r: number;
@@ -17,17 +16,63 @@ interface Particle {
   r: number;
 }
 
-/** Resolve a CSS color string (e.g. `oklch(...)`) to an {r,g,b} via a 1px canvas. */
-function resolveColor(value: string): RGB | null {
-  if (!value) return null;
+const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
+
+/** Convert OKLab lightness + a/b axes to gamma-encoded sRGB (0-255). */
+function oklabToRgb(L: number, a: number, b: number): RGB {
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+  const l = l_ * l_ * l_;
+  const m = m_ * m_ * m_;
+  const s = s_ * s_ * s_;
+  const rLin = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const gLin = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const bLin = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s;
+  const toSrgb = (c: number) => {
+    const v = clamp01(c);
+    return Math.round(
+      (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055) * 255,
+    );
+  };
+  return { r: toSrgb(rLin), g: toSrgb(gLin), b: toSrgb(bLin) };
+}
+
+/**
+ * Deterministically parse an `oklch(...)` CSS color to RGB. The theme tokens
+ * are authored in OKLCH (Tailwind v4), and parsing them ourselves avoids
+ * relying on canvas `fillStyle` support for OKLCH — a browser that rejects
+ * the value silently paints black, which is invisible on dark themes.
+ */
+function parseOklch(value: string): RGB | null {
+  const match = value.match(/^oklch\(\s*([\d.]+)(?:\s+([\d.]+)\s+([\d.]+))?/i);
+  if (!match) return null;
+  const L = clamp01(parseFloat(match[1]));
+  const C = match[2] != null ? parseFloat(match[2]) : 0;
+  const Hdeg = match[3] != null ? parseFloat(match[3]) : 0;
+  const Hrad = (Hdeg * Math.PI) / 180;
+  return oklabToRgb(L, C * Math.cos(Hrad), C * Math.sin(Hrad));
+}
+
+/** Fallback: resolve any other CSS color string via a 1px canvas probe. */
+function probeCanvas(value: string): RGB | null {
   try {
     const probe = document.createElement("canvas");
     probe.width = 1;
     probe.height = 1;
     const ctx = probe.getContext("2d");
     if (!ctx) return null;
-    ctx.clearRect(0, 0, 1, 1);
     ctx.fillStyle = value;
+    // A rejected color leaves `fillStyle` at its default (`#000000`); treat
+    // that as "no color" rather than painting black.
+    if (
+      ctx.fillStyle === "#000000" &&
+      value.toLowerCase() !== "black" &&
+      value.toLowerCase() !== "#000"
+    ) {
+      return null;
+    }
+    ctx.clearRect(0, 0, 1, 1);
     ctx.fillRect(0, 0, 1, 1);
     const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data;
     if (a === 0) return null;
@@ -35,6 +80,14 @@ function resolveColor(value: string): RGB | null {
   } catch {
     return null;
   }
+}
+
+/** Resolve a CSS custom-property value to {r,g,b}, or null when unparseable. */
+function resolveColor(value: string): RGB | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return parseOklch(trimmed) ?? probeCanvas(trimmed);
 }
 
 const LINK_DIST = 130; // particles closer than this get a connection line
@@ -50,22 +103,36 @@ const GLOW_RADIUS = 240; // radius of the soft glow that follows the cursor
  */
 export function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { resolvedTheme } = useTheme();
   const colorsRef = useRef<{ foreground: RGB | null; primary: RGB | null }>({
     foreground: null,
     primary: null,
   });
 
-  // Keep the particle/glow colors in sync with the active theme.
+  // Keep the particle/glow colors in sync with the active theme. The theme
+  // class lives on <html>, so watch it directly — this re-syncs on manual
+  // toggles and system-level theme changes without relying on a library hook.
   useEffect(() => {
-    const style = getComputedStyle(document.documentElement);
-    colorsRef.current.foreground =
-      resolveColor(style.getPropertyValue("--foreground")) ??
-      (resolvedTheme === "dark" ? { r: 255, g: 255, b: 255 } : { r: 20, g: 20, b: 20 });
-    colorsRef.current.primary =
-      resolveColor(style.getPropertyValue("--primary")) ??
-      (resolvedTheme === "dark" ? { r: 240, g: 240, b: 240 } : { r: 30, g: 30, b: 30 });
-  }, [resolvedTheme]);
+    const sync = () => {
+      const style = getComputedStyle(document.documentElement);
+      const isDark = document.documentElement.classList.contains("dark");
+      const fb = isDark
+        ? { foreground: { r: 255, g: 255, b: 255 }, primary: { r: 240, g: 240, b: 240 } }
+        : { foreground: { r: 20, g: 20, b: 20 }, primary: { r: 30, g: 30, b: 30 } };
+      colorsRef.current.foreground =
+        resolveColor(style.getPropertyValue("--foreground")) ?? fb.foreground;
+      colorsRef.current.primary =
+        resolveColor(style.getPropertyValue("--primary")) ?? fb.primary;
+    };
+
+    sync();
+
+    const observer = new MutationObserver(sync);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;

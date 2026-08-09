@@ -33,6 +33,9 @@ yarn-error.log*
 # local dev server log
 /dev-server.log
 
+# scratch / diagnostics (chrome profiles, probes)
+.tmp/
+
 # env files (can opt-in for committing if needed)
 .env*
 
