@@ -1,8 +1,8 @@
 export const siteConfig = {
   name: "Asif",
-  title: "Asif — Portfolio",
+  title: "Muhammad Asif — Portfolio",
   description:
-    "Hi, I'm Asif — a developer building fast, thoughtful things for the web. Projects, writing and more.",
+    "Muhammad Asif — Full-Stack Developer & UI/UX Designer building modern, scalable, and user-friendly digital experiences.",
   url: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
   ogImage: "/og.png",
   links: {
@@ -10,12 +10,12 @@ export const siteConfig = {
     twitter: "https://x.com/AsifKhadim36513",
     linkedin: "https://www.linkedin.com/in/asif-khadim-12ba332a4/",
   },
-  // Placeholder author info — replace with your real details, or manage via
-  // the `author` document in the Sanity Studio.
+  // Author info — manage via the `author` document in the Sanity Studio if
+  // you'd rather keep copy there instead of here.
   author: {
-    name: "Asif",
-    role: "Developer",
-    bio: "I build fast, thoughtful products for the web — from polished marketing sites to complex applications.",
+    name: "Muhammad Asif",
+    role: "Full-Stack Developer & UI/UX Designer",
+    bio: "I build modern, scalable digital products — from intuitive interfaces to robust backend systems, databases, and APIs.",
     email: "hello@example.com",
   },
 };
