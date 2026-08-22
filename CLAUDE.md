@@ -279,3 +279,128 @@ separate chatbot backend folder. When done, run `npm run dev`, confirm the
 widget renders and (if I have the backend running locally) that sending a
 message works end to end, then tell me what's left before I deploy.
 ```
+
+---
+
+# Pricing / Offers Section — Build Spec (for Claude Code CLI)
+
+> Adds a pricing/offers page (and homepage teaser) so visitors can see
+> packages and contact you on WhatsApp directly from a pricing card.
+> Offers live in Sanity so you can add/edit/reorder packages without a
+> redeploy.
+
+## 1. Sanity schema — `offer` document
+
+Add a new schema type (alongside `project`, `post`, etc. in
+`src/sanity/schemaTypes/`):
+
+- `title` (string, required) — e.g. "Starter", "Growth", "Pro"
+- `tagline` (string, optional) — e.g. "Full-stack website, 5 pages"
+- `price` (number, required) — store as a plain number, e.g. `15000`
+- `currency` (string, default `"PKR"`)
+- `billingNote` (string, optional) — e.g. "one-time" / "/month" for retainer-style offers
+- `features` (array of strings) — bullet list shown on the card
+- `popular` (boolean) — highlights the card as "Most Popular"
+- `ctaMessage` (text, optional) — custom WhatsApp prefill text for this package; falls back to a generated default if empty
+- `order` (number — manual sort control)
+- `active` (boolean, default `true`) — lets you hide an offer without deleting it
+
+Register it in `schemaTypes/index.ts` like the other document types. Query
+active offers sorted by `order` in GROQ, same pattern as `project`/`post`.
+
+**Hard constraint: no hardcoded prices anywhere in the codebase.** The
+Starter/Growth/Pro/Ultimate numbers below are *seed data you type into
+Studio*, not values that belong in a component, a constant, or a fallback
+for a failed fetch. If the Sanity query returns nothing, show an empty
+state or loading skeleton — never a hardcoded price as a "backup." The
+entire point is that you can change a price in Studio and see it reflected
+on the live site with no deploy.
+
+**Seed data to create in Studio after the schema is built** (use these three
+to start; add more later from Studio, no code change needed):
+
+| title | tagline | price | features (example) |
+|---|---|---|---|
+| Starter | Full-stack website, 5 pages | 15000 | Responsive design; Contact form; Basic SEO setup; 1 round of revisions |
+| Growth | Full-stack website + AI chatbot | 40000 | Everything in Starter; Custom AI chatbot trained on your content; Source-linked chatbot answers |
+| Pro | Full-stack + Sanity dynamic CMS | 45000 | Everything in Starter; Sanity CMS so you can edit content yourself; Blog/projects fully dynamic |
+| Ultimate | Full-stack + Sanity CMS + AI chatbot | 60000 | Everything in Pro; Custom AI chatbot trained on your content; Source-linked chatbot answers; Priority support during build |
+
+## 2. Page & components
+
+- **New route:** `src/app/(site)/pricing/page.tsx` — grid of offer cards, fetched via `sanityFetch`.
+- **New component:** `src/components/offer-card.tsx` — shadcn `Card` + `Badge` (for "Most Popular"), price formatted as `PKR {price.toLocaleString()}` + `billingNote`, feature list with check icons (`lucide-react` `Check`), and a WhatsApp CTA button (see section 3 below) at the bottom of each card.
+- **Homepage teaser:** short 3-card preview section on `page.tsx` linking to `/pricing` for the full list — reuse `offer-card.tsx`.
+
+## 3. WhatsApp CTA on each offer card
+
+- Button label: `"Ask on WhatsApp"` with the WhatsApp icon (inline SVG — `lucide-react` has no WhatsApp glyph, so add a small local `whatsapp-icon.tsx` component).
+- Link format:
+  `https://wa.me/<NEXT_PUBLIC_WHATSAPP_NUMBER>?text=<url-encoded message>`
+- Default message if `ctaMessage` is empty in Sanity:
+  `"Hi! I'm interested in the {offer.title} package (PKR {price}). Can you share more details?"`
+- Opens in a new tab (`target="_blank" rel="noopener noreferrer"`).
+
+## 4. Env var
+
+```
+NEXT_PUBLIC_WHATSAPP_NUMBER=923XXXXXXXXX
+```
+(Full international format, no `+` or leading `0` — e.g. a Pakistani mobile
+`0300-1234567` becomes `923001234567`.)
+
+## 5. Definition of done
+
+- `/pricing` renders all `active` offers from Sanity, sorted by `order`.
+- Homepage shows a 3-card teaser linking to `/pricing`.
+- Editing a price for any offer in Studio and refreshing the site (no redeploy) shows the new price — confirm this live, don't just assume it from the code.
+- Each card's WhatsApp button opens `wa.me` with a correctly pre-filled, URL-encoded message in a new tab.
+- Editing/adding/reordering an offer in Studio reflects on the site without a code change.
+- `npm run build` succeeds with no type errors.
+
+---
+
+# WhatsApp Floating Contact Button — Build Spec (for Claude Code CLI)
+
+> A site-wide floating WhatsApp button, separate from the AI chat widget,
+> for people who'd rather just message you directly.
+
+## 1. What to build
+
+**`src/components/whatsapp-button.tsx`** — client component:
+
+- Floating round button, **fixed bottom-left** (so it doesn't overlap the AI chat widget, which stays bottom-right), ~48px, WhatsApp-green background, WhatsApp icon (inline SVG, since `lucide-react` doesn't ship one).
+- Links to `https://wa.me/<NEXT_PUBLIC_WHATSAPP_NUMBER>?text=<url-encoded default greeting>` (e.g. `"Hi! I found your portfolio and wanted to ask about a project."`).
+- Opens in a new tab.
+- `aria-label="Chat on WhatsApp"` for accessibility.
+- Subtle hover scale/shadow, consistent with the rest of the shadcn/Tailwind theme — no new color palette beyond WhatsApp's brand green for this one icon.
+
+## 2. Mount it
+
+Mount once in `src/app/layout.tsx` next to the AI chat widget, but **not**
+inside the `/studio` route — same isolation pattern as the chat widget.
+
+## 3. Definition of done
+
+- Button visible bottom-left on every public page, not on `/studio`.
+- Click opens WhatsApp (web or app) with the number and prefilled message correct.
+- Doesn't visually collide with the AI chat widget on mobile.
+- `npm run build` succeeds with no type errors.
+
+---
+
+## Kickoff prompt for Claude Code
+
+```
+Read CLAUDE.md and build the Pricing/Offers section and the WhatsApp
+floating button it describes. Add the `offer` Sanity schema, seed the four
+starting packages (Starter/Growth/Pro/Ultimate) in Studio — mark Ultimate as
+`popular: true` — build the /pricing page
+and homepage teaser, and wire the WhatsApp CTA buttons on each offer card
+plus the site-wide floating WhatsApp button. Match my existing shadcn/
+Tailwind theme — no new color palette except WhatsApp green for its icon.
+Ask me for my real WhatsApp number for NEXT_PUBLIC_WHATSAPP_NUMBER if it's
+not already in .env.local. When done, run `npm run dev`, confirm /pricing
+renders live Sanity data and both WhatsApp buttons open correctly, then
+tell me what's left before I deploy.
+```

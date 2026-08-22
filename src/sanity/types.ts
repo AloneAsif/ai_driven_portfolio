@@ -98,3 +98,17 @@ export interface PostCard {
   author?: { name: string; image?: SanityImageSource } | null;
   categories?: Category[] | null;
 }
+
+export interface Offer {
+  _id: string;
+  title: string;
+  slug: Slug;
+  tagline?: string;
+  price: number;
+  currency: string;
+  billingNote?: string;
+  features?: string[];
+  popular?: boolean;
+  ctaMessage?: string;
+  order?: number;
+}

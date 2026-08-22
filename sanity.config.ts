@@ -29,6 +29,7 @@ export default defineConfig({
       if (!slug || !document?._type) return prev;
       if (document._type === "project") return `${base}/projects/${slug}`;
       if (document._type === "post") return `${base}/blog/${slug}`;
+      if (document._type === "offer") return `${base}/pricing`;
       return prev;
     },
   },

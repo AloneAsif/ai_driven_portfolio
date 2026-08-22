@@ -5,13 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/empty-state";
+import { OfferCard } from "@/components/offer-card";
 import { ProjectCard } from "@/components/project-card";
 import { Magnetic } from "@/components/reactbits/magnetic";
 import { ScrollReveal } from "@/components/reactbits/scroll-reveal";
 import { SplitText } from "@/components/reactbits/split-text";
 import { fetchSanity } from "@/sanity/lib/data";
-import { FEATURED_PROJECTS_QUERY } from "@/sanity/lib/queries";
-import type { Project } from "@/sanity/types";
+import { FEATURED_PROJECTS_QUERY, OFFERS_QUERY } from "@/sanity/lib/queries";
+import type { Offer, Project } from "@/sanity/types";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -48,12 +49,12 @@ const toolkit = [
 ];
 
 export default async function HomePage() {
-  const projects = await fetchSanity<Project[]>(
-    FEATURED_PROJECTS_QUERY,
-    {},
-    ["project"],
-  );
+  const [projects, offers] = await Promise.all([
+    fetchSanity<Project[]>(FEATURED_PROJECTS_QUERY, {}, ["project"]),
+    fetchSanity<Offer[]>(OFFERS_QUERY, {}, ["offer"]),
+  ]);
   const featuredProjects = projects ?? [];
+  const featuredOffers = (offers ?? []).slice(0, 3); // Show max 3 on homepage
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
@@ -148,6 +149,26 @@ export default async function HomePage() {
           </div>
         </ScrollReveal>
       </section>
+
+      {/* Offers teaser */}
+      {featuredOffers.length > 0 && (
+        <section className="mt-24">
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="font-heading text-2xl font-semibold">Offers & Pricing</h2>
+            <Link
+              href="/pricing"
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              View all offers →
+            </Link>
+          </div>
+          <ScrollReveal stagger={0.1} className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredOffers.map((offer, index) => (
+              <OfferCard key={offer._id} offer={offer} index={index} />
+            ))}
+          </ScrollReveal>
+        </section>
+      )}
 
       {/* Toolkit */}
       <section className="mt-16">

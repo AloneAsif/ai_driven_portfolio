@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ChatWidget } from "@/components/chat-widget";
+import { WhatsAppButton } from "@/components/whatsapp-button";
 import { SanityLive } from "@/sanity/lib/live";
 import { siteConfig } from "@/lib/site";
 import "./globals.css";
@@ -58,6 +59,7 @@ export default function RootLayout({
           {children}
           <SanityLive />
           <ChatWidget />
+          <WhatsAppButton />
         </ThemeProvider>
       </body>
     </html>

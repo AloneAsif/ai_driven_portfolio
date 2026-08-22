@@ -44,6 +44,15 @@ export const structure: StructureResolver = (S) =>
             .schemaType("category")
             .filter('_type == "category"'),
         ),
+      S.listItem()
+        .title("Offers")
+        .child(
+          S.documentList()
+            .id("offers")
+            .title("Offers")
+            .schemaType("offer")
+            .filter('_type == "offer"'),
+        ),
       S.divider(),
       ...S.documentTypeListItems(),
     ]);

@@ -35,6 +35,8 @@ function sourceHref(source: Source) {
 
 export function ChatWidget() {
   const pathname = usePathname();
+  const isStudio = pathname.startsWith("/studio");
+
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -45,9 +47,6 @@ export function ChatWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Don't render inside the Sanity Studio.
-  if (pathname.startsWith("/studio")) return null;
-
   // Move focus into the panel when it opens.
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -55,19 +54,17 @@ export function ChatWidget() {
 
   // Escape closes the panel.
   useEffect(() => {
-    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, []);
 
   // Click-outside closes the panel.
   useEffect(() => {
-    if (!open) return;
     const onClick = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (open && panelRef.current && !panelRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
@@ -130,6 +127,8 @@ export function ChatWidget() {
     e.preventDefault();
     void send();
   };
+
+  if (isStudio) return null;
 
   return (
     <>

@@ -45,3 +45,19 @@ export const POST_BY_SLUG_QUERY = defineQuery(
 export const CATEGORIES_QUERY = defineQuery(
   `*[_type == "category"] | order(title asc)`,
 );
+
+export const OFFERS_QUERY = defineQuery(
+  `*[_type == "offer" && active == true] | order(order asc) {
+    _id,
+    title,
+    slug,
+    tagline,
+    price,
+    currency,
+    billingNote,
+    features,
+    popular,
+    ctaMessage,
+    order
+  }`,
+);
