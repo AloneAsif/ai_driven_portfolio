@@ -10,6 +10,7 @@ import { ScrollReveal } from "@/components/reactbits/scroll-reveal";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import type { Offer } from "@/sanity/types";
 import { cn } from "@/lib/utils";
+import { buildOfferWhatsAppUrl } from "@/lib/whatsapp";
 
 interface OfferCardProps {
   offer: Offer;
@@ -30,10 +31,8 @@ export function OfferCard({ offer, index = 0 }: OfferCardProps) {
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Build WhatsApp message
-  const defaultMessage = `Hi! I'm interested in the ${offer.title} package (${price}${billingNote}). Can you share more details?`;
-  const message = offer.ctaMessage ?? defaultMessage;
-  const whatsappUrl = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  // Build WhatsApp URL using centralized utility
+  const whatsappUrl = buildOfferWhatsAppUrl(offer);
 
   // Track mouse position for light follow effect
   useEffect(() => {

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { WhatsAppIcon } from "@/components/whatsapp-icon";
 import { cn } from "@/lib/utils";
+import { buildGeneralWhatsAppUrl } from "@/lib/whatsapp";
 
 /**
  * Floating WhatsApp button — fixed bottom-left.
@@ -17,9 +18,7 @@ export function WhatsAppButton() {
   const [mousePos, setMousePos] = useState<{ x: number; y: number } | null>(null);
   const buttonRef = useRef<HTMLAnchorElement>(null);
 
-  const defaultMessage =
-    "Hi! I found your portfolio and wanted to ask about a project.";
-  const whatsappUrl = `https://wa.me/${process.env.NEXT_PUBLIC_WHATSAPP_NUMBER}?text=${encodeURIComponent(defaultMessage)}`;
+  const whatsappUrl = buildGeneralWhatsAppUrl();
 
   // Track mouse position for light follow effect
   useEffect(() => {
