@@ -11,14 +11,18 @@ import type { ExternalImage } from "@/sanity/types";
 
 type GalleryImage = SanityImageSource | ExternalImage;
 
-function imageUrl(image: GalleryImage) {
-  return typeof image === "object" && "url" in image
+function isExternalImage(image: GalleryImage): image is ExternalImage {
+  return typeof image === "object" && image !== null && "url" in image;
+}
+
+function imageUrl(image: GalleryImage): string {
+  return isExternalImage(image)
     ? image.url
-    : urlFor(image).url();
+    : urlFor(image).url() ?? "";
 }
 
 function imageAlt(image: GalleryImage, title: string, index: number) {
-  return typeof image === "object" && "alt" in image && image.alt
+  return isExternalImage(image) && image.alt
     ? image.alt
     : `${title} ${index + 1}`;
 }
@@ -82,6 +86,8 @@ export function GalleryLightbox({
 
   if (images.length === 0) return null;
 
+  const activeImage = activeIndex === null ? null : images[activeIndex];
+
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -137,23 +143,25 @@ export function GalleryLightbox({
             <div className="relative flex flex-1 items-center justify-center overflow-hidden px-12 sm:px-16">
               <Image
                 src={
-                  typeof images[activeIndex!] === "object" &&
-                  "url" in images[activeIndex!]
-                    ? images[activeIndex!].url
-                    : urlFor(images[activeIndex!])
+                  activeImage && isExternalImage(activeImage)
+                    ? activeImage.url
+                    : activeImage
+                      ? urlFor(activeImage)
                         .width(maxWidth)
                         .fit("max")
                         .auto("format")
-                        .url()
+                        .url() ?? ""
+                      : ""
                 }
-                alt={imageAlt(images[activeIndex!], title, activeIndex!)}
+                alt={
+                  activeImage
+                    ? imageAlt(activeImage, title, activeIndex!)
+                    : title
+                }
                 fill
                 className="object-contain"
                 sizes="100vw"
-                unoptimized={
-                  typeof images[activeIndex!] === "object" &&
-                  "url" in images[activeIndex!]
-                }
+                unoptimized={activeImage ? isExternalImage(activeImage) : false}
                 onClick={(e) => e.stopPropagation()}
               />
 
