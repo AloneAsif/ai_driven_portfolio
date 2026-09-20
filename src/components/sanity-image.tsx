@@ -4,6 +4,7 @@ import { urlFor } from "@/sanity/lib/image";
 
 interface SanityImageProps {
   asset?: SanityImageSource | null;
+  externalUrl?: string | null;
   alt?: string;
   width?: number;
   height?: number;
@@ -19,6 +20,7 @@ interface SanityImageProps {
  */
 export function SanityImage({
   asset,
+  externalUrl,
   alt,
   width,
   height,
@@ -27,9 +29,9 @@ export function SanityImage({
   className,
   fill,
 }: SanityImageProps) {
-  if (!asset) return null;
+  if (!asset && !externalUrl) return null;
 
-  const src = urlFor(asset).url();
+  const src = externalUrl ?? urlFor(asset!).url();
 
   return (
     <Image
@@ -41,6 +43,7 @@ export function SanityImage({
       sizes={sizes}
       className={className}
       fill={fill}
+      unoptimized={Boolean(externalUrl)}
     />
   );
 }

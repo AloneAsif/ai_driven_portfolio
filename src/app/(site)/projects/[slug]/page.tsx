@@ -108,6 +108,7 @@ export default async function ProjectPage({
 
       <SanityImage
         asset={project.coverImage}
+        externalUrl={project.coverImageUrl}
         alt={project.title}
         width={1200}
         height={750}
@@ -128,14 +129,20 @@ export default async function ProjectPage({
         )}
       </div>
 
-      {project.gallery && project.gallery.length > 0 && (
+      {(project.gallery?.length || project.externalGallery?.length) ? (
         <section className="mt-12">
           <h2 className="font-heading text-xl font-semibold">Gallery</h2>
           <div className="mt-4">
-            <GalleryLightbox images={project.gallery} title={project.title} />
+            <GalleryLightbox
+              images={[
+                ...(project.gallery ?? []),
+                ...(project.externalGallery ?? []),
+              ]}
+              title={project.title}
+            />
           </div>
         </section>
-      )}
+      ) : null}
     </article>
   );
 }

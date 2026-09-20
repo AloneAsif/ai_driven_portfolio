@@ -4,6 +4,7 @@ import { post } from "./post";
 import { author } from "./author";
 import { category } from "./category";
 import { offer } from "./offer";
+import { externalImage } from "./externalImage";
 
 export const schemaTypes: SchemaTypeDefinition[] = [
   project,
@@ -11,6 +12,7 @@ export const schemaTypes: SchemaTypeDefinition[] = [
   author,
   category,
   offer,
+  externalImage,
 ];
 
 export const schema = {

@@ -5,7 +5,7 @@ import {
   type PortableTextComponents,
 } from "@portabletext/react";
 import { urlFor } from "@/sanity/lib/image";
-import type { PortableTextContent } from "@/sanity/types";
+import type { PortableTextContent, ExternalImage } from "@/sanity/types";
 
 const components: PortableTextComponents = {
   block: {
@@ -79,6 +79,27 @@ const components: PortableTextComponents = {
             height={800}
             className="w-full rounded-lg"
           />
+        </figure>
+      );
+    },
+    externalImage: ({ value }) => {
+      const image = value as ExternalImage;
+      if (!image?.url) return null;
+      return (
+        <figure className="my-6">
+          <Image
+            src={image.url}
+            alt={image.alt ?? ""}
+            width={1200}
+            height={800}
+            unoptimized
+            className="w-full rounded-lg"
+          />
+          {image.caption && (
+            <figcaption className="mt-2 text-center text-sm text-muted-foreground">
+              {image.caption}
+            </figcaption>
+          )}
         </figure>
       );
     },

@@ -16,6 +16,7 @@ export function ProjectCard({ project }: { project: Project }) {
         <Card className="h-full transition-all duration-300 ease-out group-hover:-translate-y-1.5 group-hover:ring-foreground/30 group-hover:shadow-[0_18px_45px_-15px_rgb(0_0_0/0.25)]">
         <SanityImage
           asset={project.coverImage}
+          externalUrl={project.coverImageUrl}
           alt={project.title}
           width={800}
           height={500}

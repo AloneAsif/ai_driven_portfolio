@@ -7,9 +7,24 @@ import { ChevronLeft, ChevronRight, ZoomIn, X } from "lucide-react";
 import type { SanityImageSource } from "@sanity/image-url";
 import { urlFor } from "@/sanity/lib/image";
 import { cn } from "@/lib/utils";
+import type { ExternalImage } from "@/sanity/types";
+
+type GalleryImage = SanityImageSource | ExternalImage;
+
+function imageUrl(image: GalleryImage) {
+  return typeof image === "object" && "url" in image
+    ? image.url
+    : urlFor(image).url();
+}
+
+function imageAlt(image: GalleryImage, title: string, index: number) {
+  return typeof image === "object" && "alt" in image && image.alt
+    ? image.alt
+    : `${title} ${index + 1}`;
+}
 
 interface GalleryLightboxProps {
-  images: SanityImageSource[];
+  images: GalleryImage[];
   title: string;
   /** Full-size display width for the lightbox image (raw source when omitted). */
   maxWidth?: number;
@@ -79,8 +94,8 @@ export function GalleryLightbox({
             className="group relative block w-full overflow-hidden rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Image
-              src={urlFor(image).url()}
-              alt={`${title} ${index + 1}`}
+              src={imageUrl(image)}
+              alt={imageAlt(image, title, index)}
               width={800}
               height={600}
               className="w-full rounded-lg transition-transform duration-300 group-hover:scale-[1.03]"
@@ -121,15 +136,24 @@ export function GalleryLightbox({
             {/* Image area */}
             <div className="relative flex flex-1 items-center justify-center overflow-hidden px-12 sm:px-16">
               <Image
-                src={urlFor(images[activeIndex!])
-                  .width(maxWidth)
-                  .fit("max")
-                  .auto("format")
-                  .url()}
-                alt={`${title} ${activeIndex! + 1} at full size`}
+                src={
+                  typeof images[activeIndex!] === "object" &&
+                  "url" in images[activeIndex!]
+                    ? images[activeIndex!].url
+                    : urlFor(images[activeIndex!])
+                        .width(maxWidth)
+                        .fit("max")
+                        .auto("format")
+                        .url()
+                }
+                alt={imageAlt(images[activeIndex!], title, activeIndex!)}
                 fill
                 className="object-contain"
                 sizes="100vw"
+                unoptimized={
+                  typeof images[activeIndex!] === "object" &&
+                  "url" in images[activeIndex!]
+                }
                 onClick={(e) => e.stopPropagation()}
               />
 

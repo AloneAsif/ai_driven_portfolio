@@ -43,10 +43,19 @@ export interface PortableTextImage {
   alt?: string;
 }
 
+export interface ExternalImage {
+  _type: "externalImage";
+  _key?: string;
+  url: string;
+  alt: string;
+  caption?: string;
+}
+
 export type PortableTextContent = (
   | PortableTextBlock
   | PortableTextCode
   | PortableTextImage
+  | ExternalImage
 )[];
 
 export interface Author {
@@ -67,7 +76,9 @@ export interface Project {
   summary?: string;
   description?: PortableTextContent;
   coverImage?: SanityImageSource;
+  coverImageUrl?: string;
   gallery?: SanityImageSource[];
+  externalGallery?: ExternalImage[];
   techStack?: string[];
   githubUrl?: string;
   liveUrl?: string;
